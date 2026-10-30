@@ -1,10 +1,13 @@
-/* Débrief technique · Côte Ouest — interface (PWA) */
+/**
+ * DÉBRIEF TECHNIQUE · CÔTE OUEST — app.js (interface PWA)
+ * Version 1.1.0 (lot 1) — à garder identique à APP_VERSION ci-dessous et à VERSION dans sw.js.
+ */
 (function () {
   'use strict';
 
+  const APP_VERSION = '1.1.0';
   const CFG = window.APP_CONFIG || {};
   const LOGO = 'logo-blanc.png';
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
@@ -46,7 +49,6 @@
   }
   const I = {
     back: svg('<path d="M15 18l-6-6 6-6"/>'),
-    mic: svg('<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>'),
     camera: svg('<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>'),
     gallery: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'),
     pen: svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'),
@@ -57,9 +59,10 @@
     close: svg('<path d="M18 6L6 18M6 6l12 12"/>')
   };
   const GRAV = {
-    info: { label: 'Info', svg: svg('<circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.5v.01"/>', 2.2) },
-    attention: { label: 'Attention', svg: svg('<path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17v.01"/>', 2.2) },
-    critique: { label: 'Critique', svg: svg('<path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z"/><path d="M12 7.5v5M12 16.5v.01"/>', 2.2) }
+    info: { label: 'Info', short: 'Info', svg: svg('<circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.5v.01"/>', 2.2) },
+    idee: { label: 'Bonne idée', short: 'Idée', svg: svg('<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0012 2z"/>', 2.2) },
+    attention: { label: 'Attention', short: 'Attention', svg: svg('<path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17v.01"/>', 2.2) },
+    critique: { label: 'Critique', short: 'Critique', svg: svg('<path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z"/><path d="M12 7.5v5M12 16.5v.01"/>', 2.2) }
   };
 
   /* =========================================================
@@ -133,7 +136,6 @@
      RENDU
      ========================================================= */
   function render() {
-    stopMic();
     const app = $('#app');
     if (S.screen === 'boot') app.innerHTML = '<div class="spinner" role="img" aria-label="Chargement"></div>';
     else if (S.screen === 'login') app.innerHTML = vLogin();
@@ -151,11 +153,6 @@
       '<button class="icon-btn" data-a="back" aria-label="Retour">' + I.back + '</button>' +
       '<div class="grow"><div class="t1">' + esc(title) + '</div>' + (sub ? '<div class="t2">' + esc(sub) + '</div>' : '') + '</div>' +
       (extra || '') + '</header>';
-  }
-
-  function micBtn(target) {
-    if (!SR) return '';
-    return '<button type="button" class="mic" data-a="mic" data-target="' + target + '" aria-label="Dicter">' + I.mic + '</button>';
   }
 
   /* ---------- connexion ---------- */
@@ -315,13 +312,12 @@
     const nbPhotos = S.keptPhotos.length + D.photos.length;
     return '<div class="composer">' +
       (editing ? '<div class="edit-bar"><span>Modification de la note de ' + esc(editing.heure) + '</span><span><button data-a="delete-entry">Supprimer</button> <button data-a="cancel-edit">Annuler</button></span></div>' : '') +
-      '<div class="grav-pick" role="group" aria-label="Type de note">' + ['info', 'attention', 'critique'].map(function (g) {
-        return '<button type="button" class="g-' + g + '" data-a="grav" data-g="' + g + '" aria-pressed="' + (D.gravite === g) + '">' + GRAV[g].svg + GRAV[g].label + '</button>';
+      '<div class="grav-pick" role="group" aria-label="Type de note">' + ['info', 'idee', 'attention', 'critique'].map(function (g) {
+        return '<button type="button" class="g-' + g + '" data-a="grav" data-g="' + g + '" aria-pressed="' + (D.gravite === g) + '" aria-label="' + GRAV[g].label + '">' + GRAV[g].svg + '<span>' + GRAV[g].short + '</span></button>';
       }).join('') + '</div>' +
-      '<div class="rec-banner hidden" id="rec-draft">Dictée en cours. Touchez le micro pour arrêter.</div>' +
       (nbPhotos ? '<div class="thumbs">' + existing + added + '</div>' : '') +
-      '<textarea class="field" id="draft" rows="2" data-model="draft" aria-label="Note de main courante" placeholder="Noter quelque chose…">' + esc(D.texte) + '</textarea>' +
-      '<div class="tools">' + micBtn('draft') +
+      '<textarea class="field" id="draft" rows="2" data-model="draft" aria-label="Note de main courante" placeholder="Noter quelque chose… (micro du clavier pour dicter)">' + esc(D.texte) + '</textarea>' +
+      '<div class="tools">' +
       '<button type="button" class="photo-btn" data-a="take-photo" aria-label="Prendre une photo">' + I.camera + '</button>' +
       '<button type="button" class="photo-btn" data-a="pick-photo" aria-label="Choisir dans la galerie">' + I.gallery + '</button>' +
       '<input type="file" id="file-camera" accept="image/*" capture="environment" class="hidden">' +
@@ -373,18 +369,22 @@
   function openSheet(html) {
     $('#sheet-root').innerHTML = '<div class="overlay" data-a="close-sheet-bg"><div class="sheet" role="dialog" aria-modal="true">' + html + '</div></div>';
   }
-  function closeSheet() { stopMic(); S.form = null; $('#sheet-root').innerHTML = ''; }
+  function closeSheet() { S.form = null; $('#sheet-root').innerHTML = ''; }
 
   function sheetHead(title) {
     return '<div style="display:flex;align-items:center;gap:8px"><h2 class="titre grow">' + esc(title) + '</h2>' +
       '<button class="icon-btn" data-a="close-sheet" aria-label="Fermer">' + I.close + '</button></div>';
   }
 
+  const ROLE_LABELS = { admin: 'Admin', dt: 'DT projet', regisseur: 'Régisseur', chef_projet: 'Chef de projet' };
+
   function sheetAccount() {
-    const roles = { admin: 'Admin', regisseur: 'Régisseur', chef_projet: 'Chef de projet' };
+    const sv = S.user.serverVersion || '?';
     openSheet(sheetHead('Mon compte') +
-      '<div><b>' + esc(S.user.nom) + '</b><div class="muted">' + esc(S.user.email) + '</div><div class="muted">' + esc(roles[S.user.role] || '') + '</div></div>' +
-      '<button class="btn block" data-a="logout">Se déconnecter de cet appareil</button>');
+      '<div><b>' + esc(S.user.nom) + '</b><div class="muted">' + esc(S.user.email) + '</div><div class="muted">' + esc(ROLE_LABELS[S.user.role] || '') + '</div></div>' +
+      '<button class="btn block" data-a="logout">Se déconnecter de cet appareil</button>' +
+      '<p class="hint" style="text-align:center">Interface v' + APP_VERSION + ' · Serveur v' + esc(sv) +
+      (sv !== '?' && sv !== APP_VERSION ? '<br><b>Versions différentes : pensez à mettre à jour.</b>' : '') + '</p>');
   }
 
   function sheetDay() {
@@ -394,8 +394,7 @@
       (phaseFromRanges(S.day) ? 'Selon l’événement (' + esc(phaseFromRanges(S.day)) + ')' : 'Non renseignée') + '</option>' +
       S.ev.phases.map(function (p) { return '<option' + (d.ownPhase === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select></div>' +
       '<div><label class="lbl" for="eff">Effectif du jour</label>' +
-      '<div class="rec-banner hidden" id="rec-eff" style="margin-bottom:6px">Dictée en cours. Touchez le micro pour arrêter.</div>' +
-      '<div class="mic-in"><textarea class="field" id="eff" rows="2" placeholder="Ex. 1 régisseur, 5 techs, 3 bénévoles">' + esc(d.effectif) + '</textarea>' + micBtn('eff') + '</div></div>' +
+      '<textarea class="field" id="eff" rows="2" placeholder="Ex. 1 régisseur, 5 techs, 3 bénévoles">' + esc(d.effectif) + '</textarea></div>' +
       '<button class="btn primary block" data-a="save-day">Enregistrer</button>');
   }
 
@@ -404,8 +403,14 @@
     openSheet('<div class="spinner" role="img" aria-label="Chargement"></div>');
     call('formData', { id: id || '' }).then(function (fd) {
       const e = fd.event || { nom: '', lieu: '', client: '', dateDebut: '', dateFin: '', typologie: '', previousId: '', equipe: [], adresse: '', lat: '', lng: '', phases: [] };
-      S.form = { fd: fd, id: e.id || '', place: { adresse: e.adresse || '', lat: e.lat || '', lng: e.lng || '' }, sugg: [] };
-      const phaseOf = function (name) { return (e.phases || []).find(function (p) { return p.phase === name; }) || {}; };
+      const ranges = {};
+      (e.phases || []).forEach(function (p) { ranges[p.phase] = { debut: p.debut, fin: p.fin }; });
+      const startMonth = (e.dateDebut || (e.phases[0] && e.phases[0].debut) || today()).slice(0, 7);
+      S.form = {
+        fd: fd, id: e.id || '', place: { adresse: e.adresse || '', lat: e.lat || '', lng: e.lng || '' }, sugg: [],
+        ranges: ranges, active: fd.phases[0], pending: null, month: startMonth,
+        evStart: e.dateDebut || '', evEnd: e.dateFin || '', equipe: (e.equipe || []).slice()
+      };
       let html = sheetHead(e.id ? 'Modifier l’événement' : 'Nouvel événement') + '<div class="form-grid">' +
         '<div><label class="lbl" for="f-nom">Nom</label><input class="field" id="f-nom" value="' + esc(e.nom) + '" placeholder="Pagaille 2027"></div>' +
         '<div class="place-search"><label class="lbl" for="f-lieu">Lieu</label>' +
@@ -416,32 +421,132 @@
         '<div><label class="lbl" for="f-client">Client</label><input class="field" id="f-client" value="' + esc(e.client) + '"></div>' +
         '<div class="row2"><div><label class="lbl" for="f-debut">Début</label><input class="field" type="date" id="f-debut" value="' + esc(e.dateDebut) + '"></div>' +
         '<div><label class="lbl" for="f-fin">Fin</label><input class="field" type="date" id="f-fin" value="' + esc(e.dateFin) + '"></div></div>' +
-        '<p class="hint" style="margin-top:-8px">Du premier jour de prépa ou de montage au dernier jour de démontage.</p>' +
-        '<fieldset><legend>Phases (facultatif)</legend>' +
-        fd.phases.map(function (p, i) {
-          const v = phaseOf(p);
-          return '<span class="lbl" id="ph-' + i + '-l" style="margin:8px 0 0">' + esc(p) + '</span><div class="phase-row">' +
-            '<input class="field" type="date" id="ph-' + i + '-d" value="' + esc(v.debut || '') + '" aria-label="' + esc(p) + ', début">' +
-            '<input class="field" type="date" id="ph-' + i + '-f" value="' + esc(v.fin || '') + '" aria-label="' + esc(p) + ', fin"></div>';
-        }).join('') +
-        '<p class="hint">Les jours de la main courante prennent automatiquement ces phases. Vous pourrez toujours changer la phase d’un jour.</p></fieldset>' +
+        '<p class="hint" style="margin-top:-8px">Du premier jour de prépa ou de montage au dernier jour de démontage. Les dates s’élargissent seules si une phase dépasse.</p>' +
+        '<fieldset><legend>Phases (facultatif)</legend><div id="cal">' + calHtml() + '</div></fieldset>' +
         '<div><label class="lbl" for="f-typo">Typologie</label><select class="field" id="f-typo"><option value="">Non renseignée</option>' +
         fd.typologies.map(function (t) { return '<option' + (e.typologie === t ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>';
       if (fd.isAdmin) {
-        const people = (fd.users || []).slice().sort(function (a, b) { return a.nom.localeCompare(b.nom); });
         html +=
           '<div><label class="lbl" for="f-prev">Édition précédente</label><select class="field" id="f-prev"><option value="">Aucune</option>' +
           (fd.events || []).filter(function (x) { return x.id !== e.id; }).map(function (x) { return '<option value="' + esc(x.id) + '"' + (e.previousId === x.id ? ' selected' : '') + '>' + esc(x.nom) + '</option>'; }).join('') + '</select></div>' +
           '<div><label class="lbl" for="f-folder">Dossier Drive existant <span class="muted" style="font-weight:400">(facultatif)</span></label>' +
-          '<input class="field" id="f-folder" placeholder="' + (e.id ? 'Lien d’un autre dossier, sinon inchangé' : 'Lien du dossier, sinon il est créé automatiquement') + '"></div>' +
-          '<div><span class="lbl">Équipe</span><div class="checks" id="f-team">' + people.map(function (u) {
-            return '<label><input type="checkbox" value="' + esc(u.email) + '"' + ((e.equipe || []).indexOf(u.email) >= 0 ? ' checked' : '') + '>' + esc(u.nom) + ' <span class="muted" style="font-size:12px">' + esc(fd.roles[u.role] || '') + '</span></label>';
-          }).join('') + '</div><p class="hint">Les admins voient tous les événements sans être cochés.</p></div>';
+          '<input class="field" id="f-folder" placeholder="' + (e.id ? 'Lien d’un autre dossier, sinon inchangé' : 'Lien du dossier, sinon il est créé automatiquement') + '"></div>';
       }
+      html += '<fieldset><legend>Équipe</legend><div id="team-block">' + teamHtml() + '</div>' + inviteHtml() + '</fieldset>';
       html += '<button class="btn primary block" data-a="save-event">' + (e.id ? 'Enregistrer' : 'Créer l’événement') + '</button></div>';
       openSheet(html);
-      S.form = S.form || {};
     }).catch(function (err) { closeSheet(); fail(err); });
+  }
+
+  /* ---------- équipe et invitations ---------- */
+  function teamHtml() {
+    const F = S.form, fd = F.fd;
+    if (fd.isAdmin) {
+      const people = (fd.users || []).slice().sort(function (a, b) { return a.nom.localeCompare(b.nom); });
+      return '<div class="checks" id="f-team">' + people.map(function (u) {
+        return '<label><input type="checkbox" value="' + esc(u.email) + '"' + (F.equipe.indexOf(u.email) >= 0 ? ' checked' : '') + '>' + esc(u.nom) +
+          ' <span class="muted" style="font-size:12px">' + esc(fd.roles[u.role] || '') + (u.statut === 'attente' ? ', en attente' : '') + '</span></label>';
+      }).join('') + '</div><p class="hint">Les admins voient tous les événements sans être cochés.</p>';
+    }
+    const team = fd.team || [];
+    if (!team.length) return '<p class="hint" style="margin-top:0">Personne dans l’équipe pour l’instant.</p>';
+    return '<ul class="team-list">' + team.map(function (m) {
+      return '<li><b>' + esc(m.nom) + '</b> <span class="muted">' + esc(fd.roles[m.role] || '') + (m.statut === 'attente' ? ', accès en attente' : '') + '</span></li>';
+    }).join('') + '</ul>';
+  }
+
+  function inviteHtml() {
+    const F = S.form, fd = F.fd;
+    if (!F.id) return '<p class="hint">Créez d’abord l’événement pour pouvoir inviter quelqu’un par e-mail.</p>';
+    return '<div class="invite"><span class="lbl" style="margin-top:12px">Inviter un contributeur</span>' +
+      '<input class="field" id="inv-email" type="email" inputmode="email" autocomplete="off" placeholder="adresse@exemple.fr" aria-label="E-mail de la personne à inviter">' +
+      '<div class="row2"><input class="field" id="inv-nom" autocomplete="off" placeholder="Prénom Nom" aria-label="Prénom et nom (facultatif)">' +
+      '<select class="field" id="inv-role" aria-label="Rôle">' + fd.inviteRoles.map(function (r) { return '<option value="' + r + '">' + esc(fd.roles[r]) + '</option>'; }).join('') + '</select></div>' +
+      '<button type="button" class="btn block" data-a="invite">Envoyer l’invitation</button>' +
+      '<p class="hint">La personne reçoit un e-mail avec le lien direct du projet. Les adresses @coteouestfrance.com ont accès tout de suite ; les autres attendent la validation d’un admin.</p></div>';
+  }
+
+  function sendInvite(btn) {
+    const F = S.form;
+    const email = $('#inv-email').value.trim();
+    if (!email) { toast('Saisissez l’adresse e-mail.'); return; }
+    if (F.fd.isAdmin) {
+      F.equipe = Array.prototype.map.call(document.querySelectorAll('#f-team input:checked'), function (i) { return i.value; });
+    }
+    btn.disabled = true;
+    call('inviteContributor', { eventId: F.id, email: email, nom: $('#inv-nom').value, role: $('#inv-role').value }).then(function (r) {
+      btn.disabled = false;
+      if (!S.form) return;
+      F.fd.team = r.team;
+      if (r.users) F.fd.users = r.users;
+      if (F.equipe.indexOf(r.email) < 0) F.equipe.push(r.email);
+      $('#team-block').innerHTML = teamHtml();
+      $('#inv-email').value = ''; $('#inv-nom').value = '';
+      toast(r.dejaMembre ? 'Déjà dans l’équipe : e-mail renvoyé.' : r.statut === 'actif' ? 'Invitation envoyée.' : 'Invitation envoyée, accès en attente de validation.');
+    }).catch(function (e) { btn.disabled = false; fail(e); });
+  }
+
+  /* ---------- calendrier des phases ---------- */
+  const PHASE_CLASS = { 'Prépa': 'ph-prepa', 'Montage': 'ph-montage', 'Exploitation': 'ph-exploit', 'Démontage': 'ph-demont' };
+
+  function phaseOfDate(date) {
+    const F = S.form;
+    const hit = F.fd.phases.find(function (p) { const r = F.ranges[p]; return r && r.debut <= date && date <= r.fin; });
+    return hit || '';
+  }
+
+  function fmtDM(s) { const d = parseD(s); return d.getDate() + ' ' + MOIS[d.getMonth()]; }
+
+  function calHtml() {
+    const F = S.form;
+    const ym = F.month.split('-').map(Number);
+    const y = ym[0], m = ym[1];
+    const first = new Date(y, m - 1, 1);
+    const offset = (first.getDay() + 6) % 7;
+    const nbDays = new Date(y, m, 0).getDate();
+    const t = today();
+    const chips = '<div class="cal-chips" role="group" aria-label="Phase à placer">' + F.fd.phases.map(function (p) {
+      const r = F.ranges[p];
+      return '<button type="button" class="cal-chip" data-a="cal-phase" data-p="' + esc(p) + '" aria-pressed="' + (F.active === p) + '">' +
+        '<span class="dot ' + PHASE_CLASS[p] + '"></span>' + esc(p) + (r ? '<small>' + (r.debut === r.fin ? fmtDM(r.debut) : fmtDM(r.debut) + ' → ' + fmtDM(r.fin)) + '</small>' : '') + '</button>';
+    }).join('') + '</div>';
+    const help = '<p class="cal-help">' + (F.pending
+      ? 'Début « ' + esc(F.active) + ' » : ' + fmtDM(F.pending) + '. Touchez maintenant le <b>dernier jour</b> (ou le même jour pour une seule journée).'
+      : 'Touchez le <b>premier jour</b> de « ' + esc(F.active) + ' », puis le dernier.') +
+      (F.ranges[F.active] ? ' <button type="button" class="link-btn" data-a="cal-clear">Effacer « ' + esc(F.active) + ' »</button>' : '') + '</p>';
+    let cells = ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(function (d) { return '<span class="cal-dow" aria-hidden="true">' + d + '</span>'; }).join('');
+    for (let i = 0; i < offset; i++) cells += '<span></span>';
+    for (let d = 1; d <= nbDays; d++) {
+      const k = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const ph = phaseOfDate(k);
+      const inEv = F.evStart && F.evEnd && k >= F.evStart && k <= F.evEnd;
+      const cls = ['cal-day', ph ? PHASE_CLASS[ph] : '', inEv ? 'in-event' : '', F.pending === k ? 'pending' : '', k === t ? 'is-today' : ''].filter(Boolean).join(' ');
+      cells += '<button type="button" class="' + cls + '" data-a="cal-day" data-date="' + k + '" aria-label="' + esc(fmtLong(k) + (ph ? ', ' + ph : '')) + '">' + d + '</button>';
+    }
+    const MOIS_L = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    return chips + help +
+      '<div class="cal-head"><button type="button" class="icon-btn" data-a="cal-month" data-step="-1" aria-label="Mois précédent">' + I.back + '</button>' +
+      '<b>' + MOIS_L[m - 1] + ' ' + y + '</b>' +
+      '<button type="button" class="icon-btn" data-a="cal-month" data-step="1" aria-label="Mois suivant" style="transform:scaleX(-1)">' + I.back + '</button></div>' +
+      '<div class="cal-grid">' + cells + '</div>';
+  }
+
+  function refreshCal() { const el = $('#cal'); if (el) el.innerHTML = calHtml(); }
+
+  function calPickDay(date) {
+    const F = S.form;
+    if (!F.pending) { F.pending = date; refreshCal(); return; }
+    const a = F.pending < date ? F.pending : date, b = F.pending < date ? date : F.pending;
+    F.ranges[F.active] = { debut: a, fin: b };
+    F.pending = null;
+    // Les dates de l'événement s'élargissent pour couvrir la phase.
+    if (!F.evStart || a < F.evStart) { F.evStart = a; $('#f-debut').value = a; }
+    if (!F.evEnd || b > F.evEnd) { F.evEnd = b; $('#f-fin').value = b; }
+    // Passe à la phase suivante encore vide (dans l'ordre prépa → démontage).
+    const order = F.fd.phases, from = order.indexOf(F.active);
+    const next = order.slice(from + 1).concat(order.slice(0, from)).find(function (p) { return !F.ranges[p]; });
+    if (next) F.active = next;
+    refreshCal();
   }
 
   function placeInfoHtml() {
@@ -523,11 +628,8 @@
       nom: $('#f-nom').value, lieu: $('#f-lieu').value, client: $('#f-client').value,
       dateDebut: $('#f-debut').value, dateFin: $('#f-fin').value, typologie: $('#f-typo').value,
       adresse: F.place.adresse, lat: F.place.lat, lng: F.place.lng,
-      phases: fd.phases.map(function (p, i) { return { phase: p, debut: $('#ph-' + i + '-d').value, fin: $('#ph-' + i + '-f').value }; })
-        .filter(function (p) { return p.debut || p.fin; })
+      phases: fd.phases.filter(function (p) { return F.ranges[p]; }).map(function (p) { return { phase: p, debut: F.ranges[p].debut, fin: F.ranges[p].fin }; })
     };
-    const bad = payload.phases.find(function (p) { return !p.debut || !p.fin || p.fin < p.debut; });
-    if (bad) { toast('Phase « ' + bad.phase + ' » : indiquez un début et une fin dans le bon ordre.'); return; }
     if (fd.isAdmin) {
       payload.previousId = $('#f-prev').value;
       payload.folderLink = $('#f-folder').value;
@@ -609,7 +711,16 @@
         closeSheet(); render(); toast('Journée enregistrée');
       }).catch(function (e) { el.disabled = false; fail(e); });
     },
-    'mic': function (el) { toggleMic(el.dataset.target); },
+    'cal-phase': function (el) { S.form.active = el.dataset.p; S.form.pending = null; refreshCal(); },
+    'cal-day': function (el) { calPickDay(el.dataset.date); },
+    'cal-month': function (el) {
+      const p = S.form.month.split('-').map(Number);
+      const d = new Date(p[0], p[1] - 1 + Number(el.dataset.step), 1);
+      S.form.month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      refreshCal();
+    },
+    'cal-clear': function () { delete S.form.ranges[S.form.active]; S.form.pending = null; refreshCal(); },
+    'invite': function (el) { sendInvite(el); },
 
     'edit-event': function (el) { openEventForm(el.dataset.id); },
     'new-event': function () { openEventForm(''); },
@@ -647,6 +758,12 @@
   });
   document.addEventListener('change', function (ev) {
     const el = ev.target;
+    if ((el.id === 'f-debut' || el.id === 'f-fin') && S.form) {
+      S.form.evStart = $('#f-debut').value; S.form.evEnd = $('#f-fin').value;
+      if (el.value && !S.form.pending) S.form.month = el.value.slice(0, 7);
+      refreshCal();
+      return;
+    }
     if (el.id === 'file-camera' || el.id === 'file-gallery') { addPhotos(el.files); el.value = ''; return; }
     if (el.dataset && el.dataset.change === 'user-role') setUser({ email: el.dataset.email, role: el.value });
     if (el.dataset && el.dataset.change === 'user-status') setUser({ email: el.dataset.email, statut: el.value });
@@ -712,6 +829,8 @@
     if (!S.events.length) { S.screen = 'boot'; render(); }
     call('listEvents').then(function (list) {
       S.events = list; S.screen = 'home'; render();
+      const id = takeDeepLink();
+      if (id) openEvent(id);
     }).catch(function (e) { if (S.user) { S.screen = 'home'; render(); } fail(e); });
   }
 
@@ -748,7 +867,6 @@
 
   function saveEntry() {
     if (S.sending) return;
-    stopMic();
     const D = S.draft;
     if (!D.texte.trim() && !D.photos.length && !S.editId) { toast('La note est vide.'); return; }
     S.sending = true; render();
@@ -795,51 +913,26 @@
     });
   }
 
-  /* ---------- dictée ---------- */
-  let rec = null, recTarget = null;
-  function toggleMic(targetId) {
-    if (rec) { const same = recTarget === targetId; stopMic(); if (same) return; }
-    if (!SR) { toast('Dictée indisponible ici : utilisez le micro du clavier.'); return; }
-    const el = document.getElementById(targetId);
-    if (!el) return;
-    const base = el.value ? el.value.replace(/\s*$/, ' ') : '';
-    let finalTxt = '';
-    rec = new SR();
-    recTarget = targetId;
-    rec.lang = 'fr-FR';
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.onresult = function (e) {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) finalTxt += t; else interim += t;
-      }
-      el.value = base + finalTxt + interim;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-    rec.onerror = function (e) {
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Micro refusé : autorisez le micro pour cette appli, ou utilisez celui du clavier.');
-      else if (e.error === 'network') toast('Dictée impossible sans réseau : utilisez le micro du clavier.');
-    };
-    rec.onend = function () { const t = recTarget; rec = null; recTarget = null; micUi(t, false); };
-    try { rec.start(); micUi(targetId, true); }
-    catch (err) { rec = null; recTarget = null; toast('Dictée indisponible : utilisez le micro du clavier.'); }
-  }
-  function stopMic() {
-    if (rec) { const t = recTarget; try { rec.stop(); } catch (e) {} rec = null; recTarget = null; micUi(t, false); }
-  }
-  function micUi(targetId, on) {
-    if (!targetId) return;
-    document.querySelectorAll('.mic[data-target="' + targetId + '"]').forEach(function (b) { b.classList.toggle('on', on); b.setAttribute('aria-label', on ? 'Arrêter la dictée' : 'Dicter'); });
-    const banner = document.getElementById('rec-' + targetId);
-    if (banner) banner.classList.toggle('hidden', !on);
-  }
-
   /* =========================================================
      DÉMARRAGE
      ========================================================= */
+  // Lien direct vers un projet (e-mails d'invitation) : …/#evt-IDENTIFIANT
+  function readDeepLink() {
+    const m = location.hash.match(/^#evt-([\w-]+)$/);
+    if (m) {
+      store.set('co_deeplink', m[1]);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    }
+  }
+  function takeDeepLink() {
+    const id = store.get('co_deeplink');
+    if (id) store.del('co_deeplink');
+    return id;
+  }
+  window.addEventListener('hashchange', function () { readDeepLink(); if (S.user) { const id = takeDeepLink(); if (id) openEvent(id); } });
+
   function boot() {
+    readDeepLink();
     if (!S.token) { S.screen = 'login'; return render(); }
     S.screen = 'boot'; render();
     call('me').then(function (u) { S.user = u; loadHome(); }).catch(function (e) {

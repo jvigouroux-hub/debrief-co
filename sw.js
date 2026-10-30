@@ -1,7 +1,8 @@
+// DÉBRIEF TECHNIQUE · CÔTE OUEST — sw.js — Version 1.1.0 (lot 1)
 // Service worker : garde une copie de l'interface pour qu'elle s'ouvre même avec un réseau faible.
 // Pensez à changer VERSION à chaque mise à jour des fichiers.
-const VERSION = 'debrief-co-v1';
-const SHELL = ['./', './index.html', './styles.css', './app.js', './config.js', './logo-blanc.png', './icon-192.png', './manifest.webmanifest'];
+const VERSION = 'debrief-co-1.1.0';
+const SHELL = ['./', './index.html', './styles.css?v=1.1.0', './app.js?v=1.1.0', './config.js', './logo-blanc.png', './icon-192.png', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

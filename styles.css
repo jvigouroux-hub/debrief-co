@@ -1,3 +1,4 @@
+/* DÉBRIEF TECHNIQUE · CÔTE OUEST — styles.css — Version 1.1.0 (lot 1) */
 :root {
   --noir: #000000;
   --blanc: #FFFFFF;
@@ -92,15 +93,6 @@ legend { font-weight: 700; font-size: 14px; padding: 0 4px; }
 .place-info .grow a { font-weight: 700; }
 .place-actions { display: flex; gap: 8px; margin-top: 8px; }
 
-/* ----- micro (identique partout) ----- */
-.mic { width: 44px; height: 44px; border-radius: 22px; border: 2px solid var(--noir); background: var(--noir); color: var(--vert); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.mic svg { width: 22px; height: 22px; }
-.mic.on { background: var(--vert); color: var(--noir); }
-.mic-in { position: relative; }
-.mic-in textarea { padding-bottom: 60px; }
-.mic-in .mic { position: absolute; right: 8px; bottom: 10px; }
-.rec-banner { font-size: 13px; font-weight: 700; background: var(--vert); border-radius: 8px; padding: 6px 10px; }
-
 /* ----- jours ----- */
 .days { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 4px; scrollbar-width: none; }
 .days::-webkit-scrollbar { display: none; }
@@ -117,13 +109,17 @@ legend { font-weight: 700; font-size: 14px; padding: 0 4px; }
 .grav { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 7px 3px 5px; border-radius: 6px; white-space: nowrap; }
 .grav svg { width: 14px; height: 14px; }
 .g-info { background: var(--info); color: #33332F; }
+.g-idee { background: var(--vert); color: var(--noir); }
 .g-attention { background: var(--attention); color: var(--noir); }
 .g-critique { background: var(--critique); color: var(--blanc); }
-.grav-pick { display: flex; gap: 6px; }
-.grav-pick button { flex: 1; min-width: 0; height: 40px; border-radius: 8px; border: 1px solid var(--trait); background: var(--blanc); color: var(--texte-2); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; }
+.grav-pick { display: flex; gap: 5px; }
+.grav-pick button { flex: 1; min-width: 0; height: 44px; border-radius: 8px; border: 1px solid var(--trait); background: var(--blanc); color: var(--texte-2); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 3px; }
+.grav-pick button span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .grav-pick button svg { width: 16px; height: 16px; flex-shrink: 0; }
 .grav-pick button[aria-pressed="true"] { border: 2px solid var(--noir); }
 .grav-pick button[aria-pressed="true"].g-info { background: var(--info); color: #33332F; }
+.grav-pick button[aria-pressed="true"].g-idee { background: var(--vert); color: var(--noir); }
+.g-idee { background: var(--vert); color: var(--noir); }
 .grav-pick button[aria-pressed="true"].g-attention { background: var(--attention); color: var(--noir); }
 .grav-pick button[aria-pressed="true"].g-critique { background: var(--critique); color: var(--blanc); }
 
@@ -181,3 +177,31 @@ legend { font-weight: 700; font-size: 14px; padding: 0 4px; }
 .spinner { width: 28px; height: 28px; border: 3px solid var(--trait); border-top-color: var(--noir); border-radius: 50%; animation: spin .8s linear infinite; margin: 40px auto; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } #toast { transition: none; } }
+
+/* ----- calendrier des phases ----- */
+.ph-prepa { background: #CFCFC7; color: var(--noir); }
+.ph-montage { background: #FFD27A; color: var(--noir); }
+.ph-exploit { background: var(--vert); color: var(--noir); }
+.ph-demont { background: var(--noir); color: var(--blanc); }
+.cal-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cal-chip { min-height: 44px; border-radius: 12px; border: 1px solid var(--trait); background: var(--blanc); padding: 4px 12px 4px 10px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-align: left; }
+.cal-chip small { display: block; font-weight: 400; font-size: 11px; color: var(--texte-2); margin-left: 2px; }
+.cal-chip[aria-pressed="true"] { border: 2px solid var(--noir); }
+.cal-chip .dot { width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; border: 1px solid rgba(0,0,0,.25); }
+.cal-help { font-size: 13px; margin: 10px 0 4px; }
+.link-btn { border: 0; background: none; padding: 0; font-weight: 700; text-decoration: underline; font-size: 13px; min-height: 32px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px -6px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--texte-2); padding: 2px 0; }
+.cal-day { height: 44px; border: 0; border-radius: 8px; background: var(--blanc); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: #8A8A82; position: relative; }
+.cal-day.in-event { color: var(--noir); box-shadow: inset 0 0 0 1px var(--trait); }
+.cal-day.ph-prepa { background: #CFCFC7; color: var(--noir); box-shadow: none; }
+.cal-day.ph-montage { background: #FFD27A; color: var(--noir); box-shadow: none; }
+.cal-day.ph-exploit { background: var(--vert); color: var(--noir); box-shadow: none; }
+.cal-day.ph-demont { background: var(--noir); color: var(--blanc); box-shadow: none; }
+.cal-day.pending { outline: 3px solid var(--noir); outline-offset: -3px; }
+.cal-day.is-today::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: currentColor; }
+
+/* ----- équipe ----- */
+.team-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.invite { display: flex; flex-direction: column; gap: 8px; }
