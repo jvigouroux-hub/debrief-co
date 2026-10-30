@@ -1,11 +1,13 @@
 /**
  * DÉBRIEF TECHNIQUE · CÔTE OUEST — app.js (interface PWA)
- * Version 1.1.0 (lot 1) — à garder identique à APP_VERSION ci-dessous et à VERSION dans sw.js.
+ * Version 1.1.1 (lot 1, correctif) — à garder identique à APP_VERSION ci-dessous et à VERSION dans sw.js.
  */
 (function () {
   'use strict';
 
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.1.1';
+  // Version minimale du serveur attendue par cette interface (majeure.mineure).
+  const SERVER_MIN = '1.1';
   const CFG = window.APP_CONFIG || {};
   const LOGO = 'logo-blanc.png';
 
@@ -376,15 +378,17 @@
       '<button class="icon-btn" data-a="close-sheet" aria-label="Fermer">' + I.close + '</button></div>';
   }
 
+  function serverOk(v) { return !!v && v.split('.').slice(0, 2).join('.') >= SERVER_MIN; }
+
   const ROLE_LABELS = { admin: 'Admin', dt: 'DT projet', regisseur: 'Régisseur', chef_projet: 'Chef de projet' };
 
   function sheetAccount() {
-    const sv = S.user.serverVersion || '?';
+    const sv = S.user.serverVersion || 'ancienne';
     openSheet(sheetHead('Mon compte') +
       '<div><b>' + esc(S.user.nom) + '</b><div class="muted">' + esc(S.user.email) + '</div><div class="muted">' + esc(ROLE_LABELS[S.user.role] || '') + '</div></div>' +
       '<button class="btn block" data-a="logout">Se déconnecter de cet appareil</button>' +
       '<p class="hint" style="text-align:center">Interface v' + APP_VERSION + ' · Serveur v' + esc(sv) +
-      (sv !== '?' && sv !== APP_VERSION ? '<br><b>Versions différentes : pensez à mettre à jour.</b>' : '') + '</p>');
+      (!serverOk(S.user.serverVersion) ? '<br><b>Le serveur n’est pas à jour : redéployez une nouvelle version dans Apps Script.</b>' : '') + '</p>');
   }
 
   function sheetDay() {
@@ -406,6 +410,13 @@
       const ranges = {};
       (e.phases || []).forEach(function (p) { ranges[p.phase] = { debut: p.debut, fin: p.fin }; });
       const startMonth = (e.dateDebut || (e.phases[0] && e.phases[0].debut) || today()).slice(0, 7);
+      fd.roles = fd.roles || { admin: 'Admin', dt: 'DT projet', regisseur: 'Régisseur', chef_projet: 'Chef de projet' };
+      fd.inviteRoles = fd.inviteRoles || ['regisseur', 'dt', 'chef_projet'];
+      fd.phases = fd.phases || ['Prépa', 'Montage', 'Exploitation', 'Démontage'];
+      fd.typologies = fd.typologies || [];
+      fd.team = fd.team || [];
+      e.phases = e.phases || [];
+      e.equipe = e.equipe || [];
       S.form = {
         fd: fd, id: e.id || '', place: { adresse: e.adresse || '', lat: e.lat || '', lng: e.lng || '' }, sugg: [],
         ranges: ranges, active: fd.phases[0], pending: null, month: startMonth,
@@ -935,7 +946,11 @@
     readDeepLink();
     if (!S.token) { S.screen = 'login'; return render(); }
     S.screen = 'boot'; render();
-    call('me').then(function (u) { S.user = u; loadHome(); }).catch(function (e) {
+    call('me').then(function (u) {
+      S.user = u;
+      loadHome();
+      if (u.isAdmin && !serverOk(u.serverVersion)) setTimeout(function () { toast('Serveur pas à jour (v' + (u.serverVersion || 'ancienne') + ') : redéployez une nouvelle version dans Apps Script.'); }, 800);
+    }).catch(function (e) {
       if (S.screen === 'boot' && S.token) { S.screen = 'login'; S.login.error = e.message; render(); }
     });
   }
